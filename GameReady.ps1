@@ -30,3 +30,18 @@ Write-Host "MEMORY"
 Write-Host "-------------------------------------"
 Write-Host "Installed: $totalRamGB GB"
 Write-Host "Currently Free: $freeRamGB GB"
+
+$drives = Get-CimInstance Win32_LogicalDisk -Filter "DriveType=3"
+
+Write-Host ""
+Write-Host "STORAGE"
+Write-Host "-------------------------------------"
+
+foreach ($drive in $drives) {
+    $totalSpaceGB = [System.Math]::Round($drive.Size / 1GB, 2)
+    $freeSpaceGB = [System.Math]::Round($drive.FreeSpace / 1GB, 2)
+
+    Write-Host "$($drive.DeviceID)"
+    Write-Host "Total: $totalSpaceGB GB"
+    Write-Host "Free: $freeSpaceGB GB"
+}
