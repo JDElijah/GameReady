@@ -3,6 +3,7 @@ Write-Host "          GAME READY"
 Write-Host "====================================="
 Write-Host ""
 
+# CPU Detection
 $cpu = Get-CimInstance Win32_Processor
 
 Write-Host "CPU"
@@ -11,6 +12,7 @@ Write-Host "Name: $($cpu.Name)"
 Write-Host "Cores: $($cpu.NumberOfCores)"
 Write-Host "Threads: $($cpu.NumberOfLogicalProcessors)"
 
+# GPU Detection
 $gpu = Get-CimInstance Win32_VideoController
 
 Write-Host ""
@@ -19,6 +21,7 @@ Write-Host "-------------------------------------"
 Write-Host "Name: $($gpu.Name)"
 Write-Host "Driver Version: $($gpu.DriverVersion)"
 
+# Memory Detection
 $computerSystem = Get-CimInstance Win32_ComputerSystem
 $operatingSystem = Get-CimInstance Win32_OperatingSystem
 
@@ -31,6 +34,7 @@ Write-Host "-------------------------------------"
 Write-Host "Installed: $totalRamGB GB"
 Write-Host "Currently Free: $freeRamGB GB"
 
+# Storage Detection
 $drives = Get-CimInstance Win32_LogicalDisk -Filter "DriveType=3"
 
 Write-Host ""
@@ -45,3 +49,17 @@ foreach ($drive in $drives) {
     Write-Host "Total: $totalSpaceGB GB"
     Write-Host "Free: $freeSpaceGB GB"
 }
+
+# Windows / System Information
+$baseBoard = Get-CimInstance Win32_BaseBoard
+
+Write-Host ""
+Write-Host "SYSTEM"
+Write-Host "-------------------------------------"
+Write-Host "Computer Name: $($computerSystem.Name)"
+Write-Host "Motherboard Manufacturer: $($baseBoard.Manufacturer)"
+Write-Host "Motherboard: $($baseBoard.Product)"
+Write-Host "Windows: $($operatingSystem.Caption)"
+Write-Host "Version: $($operatingSystem.Version)"
+Write-Host "Build: $($operatingSystem.BuildNumber)"
+Write-Host "Architecture: $($operatingSystem.OSArchitecture)"
