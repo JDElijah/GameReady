@@ -63,3 +63,31 @@ Write-Host "Windows: $($operatingSystem.Caption)"
 Write-Host "Version: $($operatingSystem.Version)"
 Write-Host "Build: $($operatingSystem.BuildNumber)"
 Write-Host "Architecture: $($operatingSystem.OSArchitecture)"
+
+# Readiness Rules and Warnings
+Write-Host ""
+Write-Host "READINESS"
+Write-Host "-------------------------------------"
+if ($totalRamGB -lt 8) {
+    Write-Host "[FAIL] Memory: Less than 8 GB of RAM installed."
+} 
+elseif ($totalRamGB -lt 16) {
+    Write-Hose "[WARN] Memory: Less than 16 GB of RAM installed."
+}
+else {
+    Write-Host "[PASS] Memory: $totalRAMGB GB installed."
+}
+
+foreach ($drive in $drives) {
+    $freeSpacePercent = [System.Math]::Round(
+        ($drive.FreeSpace / $drive.Size) * 100,
+        1
+    )
+
+    if ($freeSpacePercent -lt 10) {
+        Write-Host "[WARN] Storage $($drive.DeviceID) Only $freeSpacePercent% free."
+    }
+    else {
+        Write-Host "[PASS] Storage $($drive.DeviceID) $freeSpacePercent% free." 
+    }
+}
