@@ -72,7 +72,7 @@ if ($totalRamGB -lt 8) {
     Write-Host "[FAIL] Memory: Less than 8 GB of RAM installed."
 } 
 elseif ($totalRamGB -lt 16) {
-    Write-Hose "[WARN] Memory: Less than 16 GB of RAM installed."
+    Write-Host "[WARN] Memory: Less than 16 GB of RAM installed."
 }
 else {
     Write-Host "[PASS] Memory: $totalRAMGB GB installed."
