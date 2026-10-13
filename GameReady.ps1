@@ -1,3 +1,23 @@
+# Write Status Function
+function Write-Status {
+    param(
+        [string]$Status,
+        [string]$Message
+    )
+
+    switch ($Status) {
+        "PASS" { $color = "Green" }
+        "WARN" { $color = "Yellow" } 
+        "FAIL" { $color = "Red" }
+        default { $color = "White" }
+    }
+
+    Write-Host "[$Status] $Message" -ForegroundColor $color
+}
+
+
+
+
 Write-Host "====================================="
 Write-Host "          GAME READY"
 Write-Host "====================================="
@@ -48,6 +68,7 @@ foreach ($drive in $drives) {
     Write-Host "$($drive.DeviceID)"
     Write-Host "Total: $totalSpaceGB GB"
     Write-Host "Free: $freeSpaceGB GB"
+    Write-Host ""
 }
 
 # Windows / System Information
@@ -65,17 +86,22 @@ Write-Host "Build: $($operatingSystem.BuildNumber)"
 Write-Host "Architecture: $($operatingSystem.OSArchitecture)"
 
 # Readiness Rules and Warnings
+$hasWarning = $false
+$hasFailure = $false
+
 Write-Host ""
 Write-Host "READINESS"
 Write-Host "-------------------------------------"
 if ($totalRamGB -lt 8) {
-    Write-Host "[FAIL] Memory: Less than 8 GB of RAM installed."
+    $hasFailure = $true
+    Write-Status -Status "FAIL" -Message "Memory: Less than 8 GB of RAM installed."
 } 
 elseif ($totalRamGB -lt 16) {
-    Write-Host "[WARN] Memory: Less than 16 GB of RAM installed."
+    $hasWarning = $true
+    Write-Status -Status "WARN" -Message "Memory: Less than 16 GB of RAM installed."
 }
 else {
-    Write-Host "[PASS] Memory: $totalRAMGB GB installed."
+    Write-Status -Status "PASS" -Message "Memory: $totalRAMGB GB installed"
 }
 
 foreach ($drive in $drives) {
@@ -85,9 +111,25 @@ foreach ($drive in $drives) {
     )
 
     if ($freeSpacePercent -lt 10) {
-        Write-Host "[WARN] Storage $($drive.DeviceID) Only $freeSpacePercent% free."
+        $hasWarning = $true
+        Write-Status -Status "WARN" -Message "Storage $($drive.DeviceID) only $freeSpacePercent% free."
     }
     else {
-        Write-Host "[PASS] Storage $($drive.DeviceID) $freeSpacePercent% free." 
+        Write-Status -Status "PASS" -Message "Storage $($drive.DeviceID) $freeSpacePercent% free." 
     }
 }
+
+# Overall Result 
+Write-Host ""
+Write-Host "-------------------------------------"
+
+if ($hasFailure) {
+    Write-Host "OVERALL STATUS: NOT READY" -ForegroundColor Red
+}
+elseif ($hasWarning) {
+    Write-Host "OVERALL STATUS: ATTENTION NEEDED" -ForegroundColor Yellow
+}
+else {
+    Write-Host "OVERALL STATUS: READY" -ForegroundColor Green
+}
+
