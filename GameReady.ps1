@@ -15,9 +15,6 @@ function Write-Status {
     Write-Host "[$Status] $Message" -ForegroundColor $color
 }
 
-
-
-
 Write-Host "====================================="
 Write-Host "          GAME READY"
 Write-Host "====================================="
@@ -101,7 +98,7 @@ elseif ($totalRamGB -lt 16) {
     Write-Status -Status "WARN" -Message "Memory: Less than 16 GB of RAM installed."
 }
 else {
-    Write-Status -Status "PASS" -Message "Memory: $totalRAMGB GB installed"
+    Write-Status -Status "PASS" -Message "Memory: $totalRAMGB GB installed."
 }
 
 foreach ($drive in $drives) {
@@ -124,12 +121,76 @@ Write-Host ""
 Write-Host "-------------------------------------"
 
 if ($hasFailure) {
-    Write-Host "OVERALL STATUS: NOT READY" -ForegroundColor Red
+    $overallStatus = "NOT READY"
+    Write-Host "OVERALL STATUS: $overallStatus" -ForegroundColor Red
 }
 elseif ($hasWarning) {
-    Write-Host "OVERALL STATUS: ATTENTION NEEDED" -ForegroundColor Yellow
+    $overallStatus = "ATTENTION NEEDED"
+    Write-Host "OVERALL STATUS: $overallStatus" -ForegroundColor Yellow
 }
 else {
-    Write-Host "OVERALL STATUS: READY" -ForegroundColor Green
+    $overallStatus = "READY"
+    Write-Host "OVERALL STATUS: $overallStatus" -ForegroundColor Green
 }
 
+# Build storage data for report 
+$storageReport = foreach ($drive in $drives) {
+    $totalSpaceGB = [System.Math]::Round($drive.Size / 1GB, 2)
+    $freeSpaceGB = [System.Math]::Round($drive.FreeSpace / 1GB, 2)
+    $freeSpacePercent = [System.Math]::Round(($drive.FreeSpace / $drive.Size) * 100, 1)
+
+    [PSCustomObject]@{
+        Drive       = $drive.DeviceID
+        TotalGB     = $totalSpaceGB
+        FreeGB      = $freeSpaceGB 
+        FreePercent = $freeSpacePercent 
+    }
+}
+
+# Build the complete GameReady report 
+$report = [PSCustomObject]@{
+    GeneratedAt   = Get-Date -Format "yyyy-MM-dd HH:mm:ss"
+    
+    System        = [PSCustomObject]@{
+        ComputerName = $computerSystem.Name
+        Windows      = $operatingSystem.Caption
+        Version      = $operatingSystem.Version
+        Architecture = $operatingSystem.OSArchitecture
+    }
+
+    CPU           = [PSCustomObject]@{
+        Name    = $cpu.Name
+        Cores    = $cpu.NumberOfCores
+        Threads = $cpu.NumberOfLogicalProcessors
+    }
+
+    GPU           = [PSCustomObject]@{
+        Name          = $gpu.Name
+        DriverVersion = $gpu.DriverVersion
+    }
+
+    Memory        = [PSCustomObject]@{
+        InstalledGB = $totalRamGB
+        FreeGB      = $freeRamGB
+    }
+
+    Storage       = $storageReport
+
+    OverallStatus = $overallStatus
+}
+
+$reportDirectory = Join-Path $PSScriptRoot "reports"
+
+if (-not (Test-path $reportDirectory)) {
+    New-Item -ItemType Directory -Path $reportDirectory | Out-Null
+}
+
+$timestamp = Get-Date -Format "yyyyMMdd-HHmmss"
+$reportPath = Join-Path $reportDirectory "GameReady-$timestamp.json"
+
+$report | 
+ConvertTo-Json -Depth 4 |
+Out-File $reportPath
+
+Write-Host ""
+Write-Host "Report saved to: $reportPath"
