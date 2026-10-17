@@ -1,3 +1,10 @@
+# Param block
+param(
+    [switch]$SaveReport,
+    [string]$Game
+)
+
+
 # Write Status Function
 function Write-Status {
     param(
@@ -133,6 +140,14 @@ else {
     Write-Host "OVERALL STATUS: $overallStatus" -ForegroundColor Green
 }
 
+if ($Game) {
+    Write-Host ""
+    Write-Host "GAME COMPARISON"
+    Write-Host "-------------------------------------"
+    Write-Host "Requested Game: $Game"
+    Write-Host "Game requirement lookup is not implemented yet." -ForegroundColor Yellow
+}
+
 # Build storage data for report 
 $storageReport = foreach ($drive in $drives) {
     $totalSpaceGB = [System.Math]::Round($drive.Size / 1GB, 2)
@@ -160,7 +175,7 @@ $report = [PSCustomObject]@{
 
     CPU           = [PSCustomObject]@{
         Name    = $cpu.Name
-        Cores    = $cpu.NumberOfCores
+        Cores   = $cpu.NumberOfCores
         Threads = $cpu.NumberOfLogicalProcessors
     }
 
@@ -179,18 +194,20 @@ $report = [PSCustomObject]@{
     OverallStatus = $overallStatus
 }
 
-$reportDirectory = Join-Path $PSScriptRoot "reports"
+if ($SaveReport) {
+    $reportDirectory = Join-Path $PSScriptRoot "reports"
 
-if (-not (Test-path $reportDirectory)) {
-    New-Item -ItemType Directory -Path $reportDirectory | Out-Null
+    if (-not (Test-path $reportDirectory)) {
+        New-Item -ItemType Directory -Path $reportDirectory | Out-Null
+    }
+
+    $timestamp = Get-Date -Format "yyyyMMdd-HHmmss"
+    $reportPath = Join-Path $reportDirectory "GameReady-$timestamp.json"
+
+    $report | 
+    ConvertTo-Json -Depth 4 |
+    Out-File $reportPath
+
+    Write-Host ""
+    Write-Host "Report saved to: $reportPath"
 }
-
-$timestamp = Get-Date -Format "yyyyMMdd-HHmmss"
-$reportPath = Join-Path $reportDirectory "GameReady-$timestamp.json"
-
-$report | 
-ConvertTo-Json -Depth 4 |
-Out-File $reportPath
-
-Write-Host ""
-Write-Host "Report saved to: $reportPath"
